@@ -19,7 +19,7 @@ class Chatbot {
     const win = document.createElement('div');
     win.id = 'chatbotWindow'; win.className = 'chatbot-window hidden';
     win.innerHTML = `
-      <div class="chatbot-header"><span>🤖 مساعد مهنتي الذكي</span><button onclick="chatbot.toggleChat()">✕</button></div>
+      <div class="chatbot-header"><span>🤖 مساعد مهنتي</span><button onclick="chatbot.toggleChat()">✕</button></div>
       <div class="chatbot-messages" id="chatbotMessages"></div>
       <div class="chatbot-input-container">
         <input type="text" id="chatbotInput" placeholder="اسألني أي شيء..." autocomplete="off" />
@@ -27,11 +27,14 @@ class Chatbot {
       </div>`;
     document.body.appendChild(btn);
     document.body.appendChild(win);
-    document.getElementById('chatbotInput').onkeypress = (e) => { if (e.key === 'Enter') this.sendMessage(); };
+
+    document.getElementById('chatbotInput').onkeypress = (e) => { 
+        if (e.key === 'Enter') this.sendMessage(); 
+    };
   }
 
   addWelcomeMessage() {
-    this.addMessage({ type: 'bot', text: 'مرحباً! أنا مستشارك المهني. كيف يمكنني مساعدتك اليوم؟' });
+    this.addMessage({ type: 'bot', text: 'مرحباً! أنا مستشارك المهني الذكي. كيف يمكنني مساعدتك اليوم؟' });
   }
 
   toggleChat() {
@@ -48,10 +51,9 @@ class Chatbot {
     input.value = '';
     this.showTyping();
 
-    // سنقوم بتجربة الروابط التي تطلبها جوجل بناءً على رسالة الخطأ الأخيرة
+    // تم تغيير الإصدار إلى v1 وتجربة المسار الصحيح للموديلات
     const endpoints = [
       `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
       `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${this.apiKey}`
     ];
 
@@ -73,17 +75,20 @@ class Chatbot {
           if (data.candidates && data.candidates[0].content) {
             this.addMessage({ type: 'bot', text: data.candidates[0].content.parts[0].text });
             success = true;
-            break; // نجحنا! توقف عن المحاولة
+            break; 
           }
+        } else {
+            const errLog = await response.json();
+            console.warn("Endpoint failed:", url, errLog);
         }
       } catch (e) {
-        console.error("Trying next endpoint...");
+        console.error("Connection error with:", url);
       }
     }
 
     if (!success) {
       this.hideTyping();
-      this.addMessage({ type: 'bot', text: "عذراً، يبدو أن هناك تحديثاً في خوادم جوجل. سأحاول العودة للعمل قريباً!" });
+      this.addMessage({ type: 'bot', text: "عذراً، أواجه صعوبة في الاتصال بخوادم جوجل حالياً. يرجى المحاولة لاحقاً." });
     }
   }
 
