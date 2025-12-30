@@ -12,7 +12,6 @@ class Chatbot {
 
   createChatInterface() {
     if (document.getElementById('chatbotToggle')) return;
-
     const btn = document.createElement('button');
     btn.id = 'chatbotToggle';
     btn.className = 'chatbot-toggle';
@@ -24,31 +23,21 @@ class Chatbot {
     win.className = 'chatbot-window hidden';
     win.innerHTML = `
       <div class="chatbot-header">
-        <div class="chatbot-header-content">
-          <div class="chatbot-avatar">🤖</div>
-          <div>
-            <h3 class="chatbot-title">مساعد مهنتي</h3>
-            <p class="chatbot-subtitle">متصل (Gemini Pro)</p>
-          </div>
-        </div>
-        <button class="chatbot-close" onclick="chatbot.toggleChat()">✕</button>
+        <span>🤖 مساعد مهنتي</span>
+        <button onclick="chatbot.toggleChat()">✕</button>
       </div>
       <div class="chatbot-messages" id="chatbotMessages"></div>
       <div class="chatbot-input-container">
-        <input type="text" id="chatbotInput" class="chatbot-input" placeholder="اكتب سؤالك هنا..." autocomplete="off" />
-        <button class="chatbot-send" id="chatbotSend" onclick="chatbot.sendMessage()">➤</button>
+        <input type="text" id="chatbotInput" placeholder="اسألني أي شيء..." autocomplete="off" />
+        <button id="chatbotSend" onclick="chatbot.sendMessage()">➤</button>
       </div>`;
-
     document.body.appendChild(btn);
     document.body.appendChild(win);
-
-    document.getElementById('chatbotInput').onkeypress = (e) => {
-      if (e.key === 'Enter') this.sendMessage();
-    };
+    document.getElementById('chatbotInput').onkeypress = (e) => { if (e.key === 'Enter') this.sendMessage(); };
   }
 
   addWelcomeMessage() {
-    this.addMessage({ type: 'bot', text: 'مرحباً بك! أنا مستشارك المهني الذكي. كيف يمكنني مساعدتك اليوم؟' });
+    this.addMessage({ type: 'bot', text: 'مرحباً! أنا مستشارك المهني. جاري فحص الاتصال بالذكاء الاصطناعي...' });
   }
 
   toggleChat() {
@@ -65,57 +54,46 @@ class Chatbot {
     input.value = '';
     this.showTyping();
 
-    // قائمة الروابط المحتملة (سيجربها البوت واحداً تلو الآخر حتى ينجح)
-    const models = [
-      "gemini-1.5-flash",
-      "gemini-pro"
+    // قائمة الروابط التي سنجربها واحداً تلو الآخر لحل مشكلة 404
+    const endpoints = [
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${this.apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.apiKey}`
     ];
 
     let success = false;
-    let finalResponse = "";
-
-    for (let model of models) {
+    for (let url of endpoints) {
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.apiKey}`;
+        console.log("Trying URL:", url);
         const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: msg }] }]
-          })
+          body: JSON.stringify({ contents: [{ parts: [{ text: msg }] }] })
         });
 
         if (response.ok) {
           const data = await response.json();
-          finalResponse = data.candidates[0].content.parts[0].text;
+          this.hideTyping();
+          this.addMessage({ type: 'bot', text: data.candidates[0].content.parts[0].text });
           success = true;
-          break; // نجح الاتصال، توقف عن المحاولة
+          break; // توقف فور النجاح
         }
       } catch (e) {
-        console.error(`Failed with model: ${model}`);
+        console.error("Endpoint failed, trying next...");
       }
     }
 
-    this.hideTyping();
-    if (success) {
-      this.addMessage({ type: 'bot', text: finalResponse });
-    } else {
-      this.addMessage({ type: 'bot', text: this.localReply(msg) });
+    if (!success) {
+      this.hideTyping();
+      this.addMessage({ type: 'bot', text: "عذراً، نظام جوجل يرفض الاتصال حالياً (404). يرجى التأكد من أن المفتاح مفعل في Google AI Studio." });
     }
-  }
-
-  localReply(msg) {
-    const t = msg.toLowerCase();
-    if (t.includes("من انت")) return "أنا مساعد ذكي صُممت لمساعدتك في منصة مهنتي لاكتشاف تخصصك الجامعي.";
-    if (t.includes("مرحبا") || t.includes("هلا")) return "أهلاً بك! كيف يمكنني مساعدتك اليوم؟";
-    return "سؤال رائع! يبدو أن السيرفر يواجه ضغطاً، ولكن بشكل عام اختيار التخصص يعتمد على ميولك الشخصية وحاجة سوق العمل.";
   }
 
   addMessage(message) {
     const container = document.getElementById('chatbotMessages');
     const div = document.createElement('div');
     div.className = `chatbot-message chatbot-message-${message.type}`;
-    div.innerHTML = `<div class="chatbot-message-content">${message.text.replace(/\n/g, '<br>')}</div>`;
+    div.innerText = message.text;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
   }
@@ -124,7 +102,7 @@ class Chatbot {
     const div = document.createElement('div');
     div.id = 'typing';
     div.className = 'chatbot-message chatbot-message-bot';
-    div.innerHTML = '<div class="chatbot-message-content">جاري التفكير...</div>';
+    div.innerText = 'جاري التفكير...';
     document.getElementById('chatbotMessages').appendChild(div);
   }
 
