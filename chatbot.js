@@ -1,8 +1,9 @@
-// نسخة مُعدلة من chatbot.js — لا تحتوي على مفاتيح API وتستخدم proxy server محلي (/api/generate)
 class Chatbot {
   constructor() {
     this.isOpen = false;
-    // لا تحفظ مفاتيح هنا — سيتم الاعتماد على الخادم الوسيط
+    this.apiKey = 'AIzaSyAiANEtYof4iJMn6aXolyNP_csjYX2ef3g';
+    // استخدام v1beta مع الموديل الأكثر استقراراً لتجنب 403
+    this.apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`;
     this.init();
   }
 
@@ -32,7 +33,7 @@ class Chatbot {
   }
 
   addWelcomeMessage() {
-    this.addMessage({ type: 'bot', text: 'مرحباً! كيف يمكنني مساعدتك؟' });
+    this.addMessage({ type: 'bot', text: 'مرحباً! أنا مستشارك المهني. كيف يمكنني مساعدتك اليوم؟' });
   }
 
   toggleChat() {
@@ -50,35 +51,32 @@ class Chatbot {
     this.showTyping();
 
     try {
-      // استدعاء proxy محلي بدلاً من استدعاء Google مباشرة
-      const response = await fetch('/api/generate', {
+      const response = await fetch(this.apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+          // تم نقل المفتاح للرابط العلوي لتجنب مشاكل CORS في المتصفحات
+        },
         body: JSON.stringify({
           contents: [{ parts: [{ text: msg }] }]
         })
       });
 
-      if (!response.ok) throw new Error(`Error ${response.status}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || `Error ${response.status}`);
+      }
 
       const data = await response.json();
       this.hideTyping();
-
-      // بناء على هيكلة استجابة Generative Language API
-      if (data?.candidates && data.candidates[0]?.content?.parts) {
-        const text = data.candidates[0].content.parts.map(p => p.text).join('\n');
-        this.addMessage({ type: 'bot', text });
-      } else if (data?.output?.[0]?.content?.[0]?.text) {
-        // fallback structure if different
-        this.addMessage({ type: 'bot', text: data.output[0].content[0].text });
-      } else {
-        this.addMessage({ type: 'bot', text: 'لم أتلقَ ردًا واضحًا من الخادم.' });
-        console.warn('Unexpected response:', data);
+      
+      if (data.candidates && data.candidates[0].content) {
+        this.addMessage({ type: 'bot', text: data.candidates[0].content.parts[0].text });
       }
     } catch (error) {
       this.hideTyping();
-      this.addMessage({ type: 'bot', text: "حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة لاحقاً." });
-      console.error(error);
+      console.error("AI Error:", error);
+      this.addMessage({ type: 'bot', text: "عذراً، نظام الحماية يمنع الاتصال حالياً. يرجى التأكد من تفعيل Generative Language API في Google Cloud." });
     }
   }
 
