@@ -34,7 +34,7 @@ class Chatbot {
   }
 
   addWelcomeMessage() {
-    this.addMessage({ type: 'bot', text: 'مرحباً! أنا مستشارك المهني الذكي. كيف يمكنني مساعدتك اليوم؟' });
+    this.addMessage({ type: 'bot', text: 'مرحباً! أنا مستشارك المهني. كيف يمكنني مساعدتك؟' });
   }
 
   toggleChat() {
@@ -51,10 +51,11 @@ class Chatbot {
     input.value = '';
     this.showTyping();
 
-    // تم تغيير الإصدار إلى v1 وتجربة المسار الصحيح للموديلات
+    // تجربة الروابط بناءً على نصيحة جوجل في الكونسول (بدءاً من v1)
     const endpoints = [
       `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
-      `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${this.apiKey}`
+      `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${this.apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.apiKey}`
     ];
 
     let success = false;
@@ -78,17 +79,16 @@ class Chatbot {
             break; 
           }
         } else {
-            const errLog = await response.json();
-            console.warn("Endpoint failed:", url, errLog);
+            console.warn("فشل الرابط، جاري تجربة البديل:", url);
         }
       } catch (e) {
-        console.error("Connection error with:", url);
+        console.error("خطأ في الاتصال بالرابط:", url);
       }
     }
 
     if (!success) {
       this.hideTyping();
-      this.addMessage({ type: 'bot', text: "عذراً، أواجه صعوبة في الاتصال بخوادم جوجل حالياً. يرجى المحاولة لاحقاً." });
+      this.addMessage({ type: 'bot', text: "عذراً، نظام جوجل يطلب تحديث الإعدادات. يرجى مراجعة Google AI Studio." });
     }
   }
 
