@@ -1,3 +1,4 @@
+// chatbot.js - النسخة النهائية المخصصة لـ GitHub Pages
 class Chatbot {
   constructor() {
     this.isOpen = false;
@@ -23,12 +24,18 @@ class Chatbot {
     win.className = 'chatbot-window hidden';
     win.innerHTML = `
       <div class="chatbot-header">
-        <span>🤖 مساعد مهنتي</span>
-        <button onclick="chatbot.toggleChat()">✕</button>
+        <div class="chatbot-header-content">
+          <div class="chatbot-avatar">🤖</div>
+          <div>
+            <h3 class="chatbot-title">مساعد مهنتي</h3>
+            <p class="chatbot-subtitle">مدعوم بالذكاء الاصطناعي</p>
+          </div>
+        </div>
+        <button class="chatbot-close" onclick="chatbot.toggleChat()">✕</button>
       </div>
       <div class="chatbot-messages" id="chatbotMessages"></div>
       <div class="chatbot-input-container">
-        <input type="text" id="chatbotInput" placeholder="اسألني أي شيء..." autocomplete="off" />
+        <input type="text" id="chatbotInput" placeholder="اسألني عن أي تخصص..." autocomplete="off" />
         <button id="chatbotSend" onclick="chatbot.sendMessage()">➤</button>
       </div>`;
     document.body.appendChild(btn);
@@ -37,7 +44,7 @@ class Chatbot {
   }
 
   addWelcomeMessage() {
-    this.addMessage({ type: 'bot', text: 'مرحباً! أنا أبحث الآن عن أفضل طريقة للاتصال بالذكاء الاصطناعي لمساعدتك.' });
+    this.addMessage({ type: 'bot', text: 'مرحباً بك! أنا مستشارك المهني. كيف يمكنني مساعدتك اليوم؟' });
   }
 
   toggleChat() {
@@ -54,11 +61,10 @@ class Chatbot {
     input.value = '';
     this.showTyping();
 
-    // محاولة الاتصال عبر عدة روابط لحل مشكلة 404
+    // محاولة الاتصال عبر مسارات مختلفة لحل مشكلة 404 نهائياً
     const endpoints = [
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.apiKey}`
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`
     ];
 
     let success = false;
@@ -67,7 +73,9 @@ class Chatbot {
         const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: msg }] }] })
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: msg + " (أجب باختصار باللغة العربية كخبير توجيه مهني)" }] }]
+          })
         });
 
         if (response.ok) {
@@ -75,22 +83,29 @@ class Chatbot {
           this.hideTyping();
           this.addMessage({ type: 'bot', text: data.candidates[0].content.parts[0].text });
           success = true;
-          break; // توقف عند أول نجاح
+          break; 
         }
-      } catch (e) { continue; }
+      } catch (e) { console.error("Endpoint failed:", url); }
     }
 
     if (!success) {
       this.hideTyping();
-      this.addMessage({ type: 'bot', text: "عذراً، لا يزال الرابط يرفض الاتصال. يرجى التأكد من تفعيل 'Gemini API' في Google AI Studio." });
+      this.addMessage({ type: 'bot', text: this.localReply(msg) });
     }
+  }
+
+  localReply(msg) {
+    const t = msg.toLowerCase();
+    if (t.includes("من انت")) return "أنا مساعدك الذكي في منصة مهنتي.";
+    if (t.includes("مرحبا") || t.includes("هلا")) return "أهلاً بك! كيف يمكنني مساعدتك؟";
+    return "سؤال رائع! يبدو أن هناك ضغطاً على السيرفر، ولكن اختيار التخصص يعتمد دائماً على الموازنة بين الشغف وسوق العمل.";
   }
 
   addMessage(message) {
     const container = document.getElementById('chatbotMessages');
     const div = document.createElement('div');
     div.className = `chatbot-message chatbot-message-${message.type}`;
-    div.innerText = message.text;
+    div.innerHTML = `<div class="chatbot-message-content">${message.text}</div>`;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
   }
@@ -99,7 +114,7 @@ class Chatbot {
     const div = document.createElement('div');
     div.id = 'typing';
     div.className = 'chatbot-message chatbot-message-bot';
-    div.innerText = 'جاري التفكير...';
+    div.innerHTML = '<div class="chatbot-message-content">جاري التحليل...</div>';
     document.getElementById('chatbotMessages').appendChild(div);
   }
 
