@@ -1,10 +1,12 @@
-// chatbot.js - إصدار Gemini 3 المحسن
+// chatbot.js - النسخة النهائية المتوافقة مع Gemini 3
 class Chatbot {
   constructor() {
     this.isOpen = false;
     this.apiKey = 'AIzaSyAiANEtYof4iJMn6aXolyNP_csjYX2ef3g';
-    // الرابط المحدث ليتوافق مع الإصدارات الجديدة
-    this.apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`;
+    
+    // تم التعديل لاستخدام Gemini 3 Pro Preview كما ظهر في حسابك
+    this.apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent?key=${this.apiKey}`;
+    
     this.init();
   }
 
@@ -14,38 +16,47 @@ class Chatbot {
   }
 
   createChatInterface() {
-    if(document.getElementById('chatbotToggle')) return;
-    
-    const btn = document.createElement('button');
-    btn.id = 'chatbotToggle';
-    btn.className = 'chatbot-toggle';
-    btn.innerHTML = '💬';
-    btn.onclick = () => this.toggleChat();
+    // التأكد من عدم تكرار الواجهة
+    if (document.getElementById('chatbotToggle')) return;
 
-    const win = document.createElement('div');
-    win.id = 'chatbotWindow';
-    win.className = 'chatbot-window hidden';
-    win.innerHTML = `
+    const chatButton = document.createElement('button');
+    chatButton.id = 'chatbotToggle';
+    chatButton.className = 'chatbot-toggle';
+    chatButton.innerHTML = '💬';
+    chatButton.onclick = () => this.toggleChat();
+
+    const chatWindow = document.createElement('div');
+    chatWindow.id = 'chatbotWindow';
+    chatWindow.className = 'chatbot-window hidden';
+    
+    chatWindow.innerHTML = `
       <div class="chatbot-header">
-        <span>🤖 مساعد مهنتي الذكي</span>
-        <button onclick="chatbot.toggleChat()">✕</button>
+        <div class="chatbot-header-content">
+          <div class="chatbot-avatar">🤖</div>
+          <div>
+            <h3 class="chatbot-title">مساعد مهنتي</h3>
+            <p class="chatbot-subtitle">يعمل بنظام Gemini 3</p>
+          </div>
+        </div>
+        <button class="chatbot-close" onclick="chatbot.toggleChat()">✕</button>
       </div>
       <div class="chatbot-messages" id="chatbotMessages"></div>
       <div class="chatbot-input-container">
-        <input type="text" id="chatbotInput" placeholder="اسألني أي شيء..." autocomplete="off" />
-        <button id="chatbotSend" onclick="chatbot.sendMessage()">➤</button>
-      </div>`;
-    
-    document.body.appendChild(btn);
-    document.body.appendChild(win);
+        <input type="text" id="chatbotInput" class="chatbot-input" placeholder="اسألني أي شيء..." autocomplete="off" />
+        <button class="chatbot-send" id="chatbotSend" onclick="chatbot.sendMessage()">➤</button>
+      </div>
+    `;
 
-    document.getElementById('chatbotInput').onkeypress = (e) => {
+    document.body.appendChild(chatButton);
+    document.body.appendChild(chatWindow);
+
+    document.getElementById('chatbotInput').addEventListener('keypress', (e) => {
       if (e.key === 'Enter') this.sendMessage();
-    };
+    });
   }
 
   addWelcomeMessage() {
-    this.addMessage({ type: 'bot', text: 'مرحباً! أنا مدعوم الآن بتقنيات Gemini 3. كيف يمكنني مساعدتك في اختيار تخصصك؟' });
+    this.addMessage({ type: 'bot', text: 'مرحباً! أنا مساعدك المهني المدعوم بأحدث تقنيات Gemini 3. كيف يمكنني مساعدتك؟' });
   }
 
   toggleChat() {
@@ -67,22 +78,36 @@ class Chatbot {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: msg }] }]
+          contents: [{
+            parts: [{ text: msg + " (أجب باختصار باللغة العربية كخبير توجيه مهني)" }]
+          }]
         })
       });
 
-      if (!response.ok) throw new Error('API Error');
-
-      const data = await response.json();
-      this.hideTyping();
-      
-      if (data.candidates && data.candidates[0].content) {
-        this.addMessage({ type: 'bot', text: data.candidates[0].content.parts[0].text });
+      // إذا لم ينجح الرابط الأول، سنحاول الرابط البديل تلقائياً
+      if (!response.ok) {
+          const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`;
+          const fallbackRes = await fetch(fallbackUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contents: [{ parts: [{ text: msg }] }] })
+          });
+          const data = await fallbackRes.json();
+          this.displayResult(data);
+      } else {
+          const data = await response.json();
+          this.displayResult(data);
       }
     } catch (error) {
       this.hideTyping();
-      this.addMessage({ type: 'bot', text: "عذراً، يبدو أن هناك مشكلة في الاتصال بالنموذج الجديد. سأحاول الرد عليك لاحقاً!" });
-      console.error(error);
+      this.addMessage({ type: 'bot', text: "عذراً، يبدو أن هناك مشكلة فنية. حاول مجدداً بعد قليل." });
+    }
+  }
+
+  displayResult(data) {
+    this.hideTyping();
+    if (data.candidates && data.candidates[0]) {
+      this.addMessage({ type: 'bot', text: data.candidates[0].content.parts[0].text });
     }
   }
 
@@ -90,7 +115,7 @@ class Chatbot {
     const container = document.getElementById('chatbotMessages');
     const div = document.createElement('div');
     div.className = `chatbot-message chatbot-message-${message.type}`;
-    div.innerText = message.text;
+    div.innerHTML = `<div class="chatbot-message-content">${message.text}</div>`;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
   }
@@ -99,7 +124,7 @@ class Chatbot {
     const div = document.createElement('div');
     div.id = 'typing';
     div.className = 'chatbot-message chatbot-message-bot';
-    div.innerText = 'جاري التفكير...';
+    div.innerHTML = '<div class="chatbot-message-content">جاري التفكير...</div>';
     document.getElementById('chatbotMessages').appendChild(div);
   }
 
@@ -109,4 +134,4 @@ class Chatbot {
   }
 }
 
-const chatbot = new Chatbot();
+let chatbot = new Chatbot();
