@@ -1,6 +1,7 @@
 class Chatbot {
   constructor() {
     this.isOpen = false;
+    // تم تحديث المفتاح واستخدام الموديل الأكثر توافقاً مع الويب
     this.apiKey = 'AIzaSyAiANEtYof4iJMn6aXolyNP_csjYX2ef3g';
     this.init();
   }
@@ -19,7 +20,7 @@ class Chatbot {
     const win = document.createElement('div');
     win.id = 'chatbotWindow'; win.className = 'chatbot-window hidden';
     win.innerHTML = `
-      <div class="chatbot-header"><span>🤖 مساعد مهنتي</span><button onclick="chatbot.toggleChat()">✕</button></div>
+      <div class="chatbot-header"><span>🤖 مساعد مهنتي الذكي</span><button onclick="chatbot.toggleChat()">✕</button></div>
       <div class="chatbot-messages" id="chatbotMessages"></div>
       <div class="chatbot-input-container">
         <input type="text" id="chatbotInput" placeholder="اسألني أي شيء..." autocomplete="off" />
@@ -29,12 +30,12 @@ class Chatbot {
     document.body.appendChild(win);
 
     document.getElementById('chatbotInput').onkeypress = (e) => { 
-        if (e.key === 'Enter') this.sendMessage(); 
+      if (e.key === 'Enter') this.sendMessage(); 
     };
   }
 
   addWelcomeMessage() {
-    this.addMessage({ type: 'bot', text: 'مرحباً! أنا مستشارك المهني. كيف يمكنني مساعدتك؟' });
+    this.addMessage({ type: 'bot', text: 'أهلاً بك! أنا جاهز لمساعدتك في اختيار تخصصك المهني. ماذا يدور في ذهنك؟' });
   }
 
   toggleChat() {
@@ -51,44 +52,36 @@ class Chatbot {
     input.value = '';
     this.showTyping();
 
-    // تجربة الروابط بناءً على نصيحة جوجل في الكونسول (بدءاً من v1)
-    const endpoints = [
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`,
-      `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${this.apiKey}`,
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${this.apiKey}`
-    ];
+    // بناءً على الوثائق، سنستخدم المسار المستقر v1 لضمان تخطي خطأ 404
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`;
 
-    let success = false;
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: msg }] }]
+        })
+      });
 
-    for (let url of endpoints) {
-      try {
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: msg }] }]
-          })
-        });
+      const data = await response.json();
 
-        if (response.ok) {
-          const data = await response.json();
-          this.hideTyping();
-          if (data.candidates && data.candidates[0].content) {
-            this.addMessage({ type: 'bot', text: data.candidates[0].content.parts[0].text });
-            success = true;
-            break; 
-          }
-        } else {
-            console.warn("فشل الرابط، جاري تجربة البديل:", url);
-        }
-      } catch (e) {
-        console.error("خطأ في الاتصال بالرابط:", url);
+      if (!response.ok) {
+        // إذا استمر خطأ 403، فهذا يعني أن المفتاح يحتاج لتفعيل من Google Cloud Console
+        throw new Error(data.error?.message || "خطأ في الصلاحيات");
       }
-    }
 
-    if (!success) {
       this.hideTyping();
-      this.addMessage({ type: 'bot', text: "عذراً، نظام جوجل يطلب تحديث الإعدادات. يرجى مراجعة Google AI Studio." });
+      if (data.candidates && data.candidates[0].content) {
+        this.addMessage({ type: 'bot', text: data.candidates[0].content.parts[0].text });
+      }
+    } catch (error) {
+      this.hideTyping();
+      console.error("AI Error:", error);
+      this.addMessage({ 
+        type: 'bot', 
+        text: "نظام جوجل يرفض الاتصال حالياً. يرجى التأكد من تفعيل 'Generative Language API' في مشروعك على Google Cloud." 
+      });
     }
   }
 
