@@ -24,25 +24,31 @@ class Chatbot {
     win.className = 'chatbot-window hidden';
     win.innerHTML = `
       <div class="chatbot-header">
-        <span>🤖 مساعد مهنتي</span>
-        <button onclick="chatbot.toggleChat()">✕</button>
+        <div class="chatbot-header-content">
+          <div class="chatbot-avatar">🤖</div>
+          <div>
+            <h3 class="chatbot-title">مساعد مهنتي</h3>
+            <p class="chatbot-subtitle">متصل (Gemini Pro)</p>
+          </div>
+        </div>
+        <button class="chatbot-close" onclick="chatbot.toggleChat()">✕</button>
       </div>
       <div class="chatbot-messages" id="chatbotMessages"></div>
       <div class="chatbot-input-container">
-        <input type="text" id="chatbotInput" placeholder="اسألني أي شيء..." autocomplete="off" />
-        <button id="chatbotSend" onclick="chatbot.sendMessage()">➤</button>
+        <input type="text" id="chatbotInput" class="chatbot-input" placeholder="اكتب سؤالك هنا..." autocomplete="off" />
+        <button class="chatbot-send" id="chatbotSend" onclick="chatbot.sendMessage()">➤</button>
       </div>`;
 
     document.body.appendChild(btn);
     document.body.appendChild(win);
 
-    document.getElementById('chatbotInput').addEventListener('keypress', (e) => {
+    document.getElementById('chatbotInput').onkeypress = (e) => {
       if (e.key === 'Enter') this.sendMessage();
-    });
+    };
   }
 
   addWelcomeMessage() {
-    this.addMessage({ type: 'bot', text: 'مرحباً! أنا مستشارك المهني. كيف يمكنني مساعدتك؟' });
+    this.addMessage({ type: 'bot', text: 'مرحباً بك! أنا مستشارك المهني الذكي. كيف يمكنني مساعدتك اليوم؟' });
   }
 
   toggleChat() {
@@ -59,39 +65,57 @@ class Chatbot {
     input.value = '';
     this.showTyping();
 
-    // تجربة الرابط الأكثر استقراراً لنموذج Pro
-    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${this.apiKey}`;
+    // قائمة الروابط المحتملة (سيجربها البوت واحداً تلو الآخر حتى ينجح)
+    const models = [
+      "gemini-1.5-flash",
+      "gemini-pro"
+    ];
 
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: msg }] }]
-        })
-      });
+    let success = false;
+    let finalResponse = "";
 
-      if (!response.ok) {
-        throw new Error(`Failed with status: ${response.status}`);
+    for (let model of models) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.apiKey}`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: msg }] }]
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          finalResponse = data.candidates[0].content.parts[0].text;
+          success = true;
+          break; // نجح الاتصال، توقف عن المحاولة
+        }
+      } catch (e) {
+        console.error(`Failed with model: ${model}`);
       }
-
-      const data = await response.json();
-      this.hideTyping();
-      if (data.candidates && data.candidates[0].content) {
-        this.addMessage({ type: 'bot', text: data.candidates[0].content.parts[0].text });
-      }
-    } catch (error) {
-      this.hideTyping();
-      console.error("Final Error Trace:", error);
-      this.addMessage({ type: 'bot', text: "عذراً، نظام الذكاء الاصطناعي يحتاج لتفعيل من الإعدادات. هل تود أن أجيبك بشكل يدوي؟" });
     }
+
+    this.hideTyping();
+    if (success) {
+      this.addMessage({ type: 'bot', text: finalResponse });
+    } else {
+      this.addMessage({ type: 'bot', text: this.localReply(msg) });
+    }
+  }
+
+  localReply(msg) {
+    const t = msg.toLowerCase();
+    if (t.includes("من انت")) return "أنا مساعد ذكي صُممت لمساعدتك في منصة مهنتي لاكتشاف تخصصك الجامعي.";
+    if (t.includes("مرحبا") || t.includes("هلا")) return "أهلاً بك! كيف يمكنني مساعدتك اليوم؟";
+    return "سؤال رائع! يبدو أن السيرفر يواجه ضغطاً، ولكن بشكل عام اختيار التخصص يعتمد على ميولك الشخصية وحاجة سوق العمل.";
   }
 
   addMessage(message) {
     const container = document.getElementById('chatbotMessages');
     const div = document.createElement('div');
     div.className = `chatbot-message chatbot-message-${message.type}`;
-    div.innerText = message.text;
+    div.innerHTML = `<div class="chatbot-message-content">${message.text.replace(/\n/g, '<br>')}</div>`;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
   }
@@ -100,7 +124,7 @@ class Chatbot {
     const div = document.createElement('div');
     div.id = 'typing';
     div.className = 'chatbot-message chatbot-message-bot';
-    div.innerText = 'جاري التفكير...';
+    div.innerHTML = '<div class="chatbot-message-content">جاري التفكير...</div>';
     document.getElementById('chatbotMessages').appendChild(div);
   }
 
