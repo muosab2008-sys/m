@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> تفاصيل التخصص - مهنتي</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <span class="logo-icon">🎓</span>
+                    <span class="logo-text">مهنتي</span>
+                </a>
+                <nav class="nav">
+                    <a href="index.html" class="nav-link">الرئيسية</a>
+                    <a href="assessment.html" class="nav-link">اختبار التخصص</a>
+                    <a href="majors.html" class="nav-link active">التخصصات</a>
+                    <a href="index.html#workshop" class="nav-link">الورشة</a>
+                    <a href="index.html#contact" class="nav-link">تواصل معنا</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="detail-hero" id="heroSection">
+        <div class="container">
+            <div class="detail-icon" id="majorIcon"></div>
+            <h1 class="detail-title" id="majorTitle"></h1>
+            <p class="detail-description" id="majorDescription"></p>
+        </div>
+    </section>
+
+    <!-- Details Section -->
+    <section class="section">
+        <div class="container">
+            <div class="info-grid" id="infoGrid"></div>
+            
+            <div class="card section-card">
+                <h2 class="section-card-title">المسارات المهنية</h2>
+                <div id="careersList"></div>
+            </div>
+            
+            <div class="card section-card">
+                <h2 class="section-card-title">المهارات المطلوبة</h2>
+                <div id="skillsList"></div>
+            </div>
+            
+            <!-- خارطة الطريق المهنية -->
+            <div class="card roadmap-card">
+                <h2 class="section-card-title">🗺️ خارطة الطريق المهنية</h2>
+                <div id="roadmapContainer" class="roadmap-container">
+                    <!-- سيتم ملء الخارطة بواسطة JavaScript -->
+                </div>
+            </div>
+            
+            <div class="text-center" style="margin-top: 3rem;">
+                <a href="assessment.html" class="btn btn-primary" style="margin-left: 1rem;">ابدأ اختبار التخصص</a>
+                <a href="majors.html" class="btn btn-secondary">عودة للتخصصات</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-title">مهنتي</h3>
+                    <p class="footer-text">منصتك الموثوقة لاختيار التخصص الجامعي المناسب</p>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-subtitle">روابط سريعة</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">الرئيسية</a></li>
+                        <li><a href="assessment.html">اختبار التخصص</a></li>
+                        <li><a href="majors.html">التخصصات</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-subtitle">تواصل معنا</h4>
+                    <div class="footer-links">
+                        <a href="mailto:muosab2008@gmail.com">muosab2008@gmail.com</a>
+                        <a href="tel:0504352455">0504352455</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 مهنتي. جميع الحقوق محفوظة.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="major-detail.js"></script>
+    <script src="chatbot.js"></script>
+</body>
+</html>

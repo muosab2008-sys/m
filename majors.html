@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> التخصصات الجامعية - مهنتي</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <span class="logo-icon">🎓</span>
+                    <span class="logo-text">مهنتي</span>
+                </a>
+                <nav class="nav">
+                    <a href="index.html" class="nav-link">الرئيسية</a>
+                    <a href="assessment.html" class="nav-link">اختبار التخصص</a>
+                    <a href="majors.html" class="nav-link active">التخصصات</a>
+                    <a href="index.html#workshop" class="nav-link">الورشة</a>
+                    <a href="index.html#contact" class="nav-link">تواصل معنا</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Majors Section -->
+    <section class="section">
+        <div class="container">
+            <div class="text-center">
+                <h1 class="section-title">التخصصات الجامعية</h1>
+                <p class="section-description">استكشف التخصصات المتاحة واختر ما يناسب اهتماماتك وأهدافك المهنية</p>
+            </div>
+
+            <!-- شريط البحث -->
+            <div class="search-container">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="search-input" 
+                        placeholder="ابحث عن تخصص... (مثال: برمجة، بناء، طب، قانون)"
+                        autocomplete="off"
+                    />
+                    <button id="clearSearch" class="clear-search-btn hidden">✕</button>
+                </div>
+                <p class="search-hint">ابحث بكلمات مثل: برمجة، بناء، طب، قانون، تصميم، إدارة</p>
+            </div>
+
+            <div class="majors-grid" id="majorsGrid">
+                <!-- سيتم ملء البطاقات بواسطة JavaScript -->
+            </div>
+            
+            <div id="noResults" class="no-results hidden">
+                <p>لم يتم العثور على تخصصات تطابق بحثك. حاول البحث بكلمات أخرى.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-title">مهنتي</h3>
+                    <p class="footer-text">منصتك الموثوقة لاختيار التخصص الجامعي المناسب</p>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-subtitle">روابط سريعة</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">الرئيسية</a></li>
+                        <li><a href="assessment.html">اختبار التخصص</a></li>
+                        <li><a href="majors.html">التخصصات</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-subtitle">تواصل معنا</h4>
+                    <div class="footer-links">
+                        <a href="mailto:muosab2008@gmail.com">muosab2008@gmail.com</a>
+                        <a href="tel:0504352455">0504352455</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 مهنتي. جميع الحقوق محفوظة.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="majors.js"></script>
+    <script src="chatbot.js"></script>
+</body>
+</html>

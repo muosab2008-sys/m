@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> اختبار تحديد التخصص - مهنتي</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <span class="logo-icon">🎓</span>
+                    <span class="logo-text">مهنتي</span>
+                </a>
+                <nav class="nav">
+                    <a href="index.html" class="nav-link">الرئيسية</a>
+                    <a href="assessment.html" class="nav-link active">اختبار التخصص</a>
+                    <a href="majors.html" class="nav-link">التخصصات</a>
+                    <a href="index.html#workshop" class="nav-link">الورشة</a>
+                    <a href="index.html#contact" class="nav-link">تواصل معنا</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Assessment Section -->
+    <section class="section">
+        <div class="container">
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div class="text-center" style="margin-bottom: 3rem;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                        <span class="logo-icon" style="font-size: 3rem; filter: drop-shadow(0 0 15px var(--blue-glow));">🎓</span>
+                        <h1 class="section-title" style="margin: 0;">اختبار تحديد التخصص الجامعي</h1>
+                    </div>
+                    <p class="section-description">أجب على الأسئلة التالية بصدق لنساعدك في اختيار التخصص المناسب</p>
+                </div>
+
+                <!-- Progress Bar -->
+                <div id="progressContainer" class="progress-bar">
+                    <div id="progressBar" class="progress-fill" style="width: 6.67%"></div>
+                </div>
+                <p class="text-center" style="color: var(--text-secondary); margin-bottom: 2rem;">
+                    السؤال <span id="currentQuestion">1</span> من <span id="totalQuestions">15</span>
+                </p>
+
+                <!-- Questions Container -->
+                <div id="questionsContainer">
+                    <!-- سيتم ملء الأسئلة بواسطة JavaScript -->
+                </div>
+
+                <!-- Navigation Buttons -->
+                <div class="nav-buttons">
+                    <button id="prevBtn" class="btn btn-secondary" onclick="previousQuestion()" disabled>السابق</button>
+                    <button id="nextBtn" class="btn btn-primary" onclick="nextQuestion()" disabled>التالي</button>
+                    <button id="submitBtn" class="btn btn-primary hidden" onclick="calculateResults()">عرض النتائج</button>
+                </div>
+
+                <!-- Results Container -->
+                <div id="resultsContainer" class="hidden">
+                    <div class="text-center" style="margin-bottom: 2rem;">
+                        <h2 class="section-title">نتائج الاختبار</h2>
+                        <p class="section-description">بناءً على إجاباتك، إليك التخصصات الأنسب لك:</p>
+                    </div>
+                    <div id="resultsContent"></div>
+                    
+                    <!-- حاوية تقرير الذكاء الاصطناعي -->
+                    <div id="aiReportSection" class="ai-report-section hidden">
+                        <div class="ai-report-header">
+                            <div class="ai-icon">🤖</div>
+                            <div>
+                                <h3 class="ai-report-title">تحليل ذكي بالذكاء الاصطناعي</h3>
+                                <p class="ai-report-subtitle">تقرير مفصل ومخصص بناءً على نتائجك</p>
+                            </div>
+                        </div>
+                        <div id="aiReportContent" class="ai-report-content">
+                            <div class="loading-container">
+                                <div class="loading-spinner"></div>
+                                <p>جاري تحليل النتائج بالذكاء الاصطناعي...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center" style="margin-top: 2rem;">
+                        <button onclick="downloadPDF()" class="btn btn-primary" id="downloadBtn" style="margin-left: 1rem;">
+                            📥 تحميل التقرير كـ PDF
+                        </button>
+                        <a href="majors.html" class="btn btn-primary">استكشف جميع التخصصات</a>
+                        <button onclick="restartTest()" class="btn btn-secondary" style="margin-right: 1rem;">إعادة الاختبار</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-title">مهنتي</h3>
+                    <p class="footer-text">منصتك الموثوقة لاختيار التخصص الجامعي المناسب</p>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-subtitle">روابط سريعة</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">الرئيسية</a></li>
+                        <li><a href="assessment.html">اختبار التخصص</a></li>
+                        <li><a href="majors.html">التخصصات</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4 class="footer-subtitle">تواصل معنا</h4>
+                    <div class="footer-links">
+                        <a href="mailto:muosab2008@gmail.com">muosab2008@gmail.com</a>
+                        <a href="tel:0504352455">0504352455</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 مهنتي. جميع الحقوق محفوظة.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- مكتبة html2pdf.js - في الهيدر لضمان التحميل المبكر -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="assessment.js"></script>
+    <script src="chatbot.js"></script>
+</body>
+</html>
