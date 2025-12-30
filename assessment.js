@@ -394,7 +394,7 @@ async function displayResults(results) {
   await generateAIReport(topResult, aiAnalysis)
 }
 
-// دالة تحليل النتائج باستخدام Gemini API
+// دالة تحليل النتائج باستخدام proxy الخادم
 async function analyzeResultsWithAI(results, answers) {
   try {
     const topResults = results.slice(0, 3).map(r => `${r.name} (${r.percentage}%)`).join('، ')
@@ -410,16 +410,16 @@ ${topResults}
 
 قم بإنشاء تحليل شامل ومفصل بالعربية يتضمن:
 
-1. **لماذا هذا التخصص مناسب لك؟**
+1. لماذا هذا التخصص مناسب لك؟
    - تحليل الميول والاهتمامات بناءً على النتائج
    - نقاط القوة التي تجعلك مناسباً لهذا التخصص
 
-2. **المهارات التي تحتاج لتطويرها**
+2. المهارات التي تحتاج لتطويرها
    - المهارات الأساسية المطلوبة
    - خطة تطوير المهارات
    - الموارد المقترحة للتعلم
 
-3. **المستقبل الوظيفي في السعودية**
+3. المستقبل الوظيفي في السعودية
    - الفرص الوظيفية المتاحة
    - الرواتب المتوقعة (بالريال السعودي)
    - القطاعات الأكثر طلباً
@@ -427,22 +427,19 @@ ${topResults}
 
 اجعل التقرير احترافياً ومفيداً ومكتوباً بالعربية الفصحى. استخدم فقرات واضحة ومنظمة. أجب بالعربية فقط.`
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyCRt01p00Ya7ME3FJcENOwjiFp6hGfvi8U`, {
+    const response = await fetch('/api/generate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }]
+        contents: [{ parts: [{ text: prompt }] }]
       })
     })
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      const txt = await response.text()
+      throw new Error(`Server error: ${response.status} - ${txt}`)
     }
 
     const data = await response.json()
@@ -450,7 +447,8 @@ ${topResults}
     if (data.candidates && data.candidates[0] && data.candidates[0].content) {
       return data.candidates[0].content.parts[0].text
     } else {
-      throw new Error('لم يتم الحصول على تحليل')
+      console.warn('AI analyze: unexpected response', data)
+      return null
     }
   } catch (error) {
     console.error('Error analyzing results:', error)
@@ -458,7 +456,7 @@ ${topResults}
   }
 }
 
-// دالة إنشاء التقرير الذكي باستخدام Google AI
+// دالة إنشاء التقرير الذكي باستخدام الخادم الوسيط
 async function generateAIReport(major, aiAnalysis = null) {
   const reportContent = document.getElementById("aiReportContent")
   
@@ -472,22 +470,19 @@ async function generateAIReport(major, aiAnalysis = null) {
 
 اجعل التقرير احترافياً ومفيداً ومكتوباً بالعربية الفصحى. استخدم فقرات واضحة. أجب بالعربية فقط.`
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyCRt01p00Ya7ME3FJcENOwjiFp6hGfvi8U`, {
+    const response = await fetch('/api/generate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }]
+        contents: [{ parts: [{ text: prompt }] }]
       })
     })
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      const txt = await response.text()
+      throw new Error(`Server error: ${response.status} - ${txt}`)
     }
 
     const data = await response.json()
@@ -503,46 +498,17 @@ async function generateAIReport(major, aiAnalysis = null) {
       // تنظيف ومعالجة النص العربي
       reportText = reportText.trim()
       
-      // التحقق من أن النص عربي وليس مشفر
-      if (!/[\u0600-\u06FF]/.test(reportText)) {
-        console.warn('النص لا يحتوي على أحرف عربية، استخدام التقرير الاحتياطي')
-        throw new Error('تنسيق النص غير صحيح')
-      }
-      
       // تقسيم النص إلى فقرات
       const paragraphs = reportText.split(/\n\s*\n/).filter(p => p.trim().length > 0)
       
-      // إنشاء HTML بشكل آمن
-      const reportHTML = paragraphs.map((paragraph, index) => {
-        // تنظيف الفقرة
-        let cleanParagraph = paragraph.trim()
-        
-        // استبدال الأسطر الجديدة بـ <br>
-        cleanParagraph = cleanParagraph.replace(/\n/g, '<br>')
-        
-        // معالجة HTML entities
+      // إنشاء HTML بسيط وآمن
+      const reportHTML = paragraphs.map(p => {
         const div = document.createElement('div')
-        div.textContent = cleanParagraph
-        cleanParagraph = div.innerHTML
-        
-        // إذا كانت الفقرة تبدأ برقم أو عنوان
-        if (/^[0-9]+\.\s*/.test(paragraph) || /^###\s*/.test(paragraph) || /^##\s*/.test(paragraph)) {
-          const title = paragraph.replace(/^[0-9]+\.\s*/, '').replace(/^###\s*/, '').replace(/^##\s*/, '').trim()
-          return `<h4 style="color: var(--blue-light); margin-top: ${index > 0 ? '1.5rem' : '0'}; margin-bottom: 0.75rem; font-size: 1.125rem; font-weight: 700; text-align: right; direction: rtl;">${title}</h4>`
-        }
-        
-        return `<p style="color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.8; text-align: right; direction: rtl; font-family: 'Tajawal', sans-serif;">${cleanParagraph}</p>`
+        div.textContent = p.replace(/\n/g, '<br>')
+        return `<p style="color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.8; text-align: right; direction: rtl; font-family: 'Tajawal', sans-serif;">${div.innerHTML}</p>`
       }).join('')
-      
-      // عرض التقرير بتأثير الكتابة
-      const typingContainer = document.createElement("div")
-      typingContainer.id = "typingContainer"
-      typingContainer.style.cssText = "text-align: right; direction: rtl; font-family: 'Tajawal', sans-serif; unicode-bidi: bidi-override;"
-      reportContent.innerHTML = ''
-      reportContent.appendChild(typingContainer)
-      
-      // تطبيق تأثير الكتابة
-      typeText(reportHTML, typingContainer)
+
+      reportContent.innerHTML = reportHTML
     } else {
       throw new Error('لم يتم الحصول على تقرير')
     }

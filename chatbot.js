@@ -1,9 +1,8 @@
+// نسخة مُعدلة من chatbot.js — لا تحتوي على مفاتيح API وتستخدم proxy server محلي (/api/generate)
 class Chatbot {
   constructor() {
     this.isOpen = false;
-    this.apiKey = 'AIzaSyAiANEtYof4iJMn6aXolyNP_csjYX2ef3g';
-    // الرابط المخصص لنسخة Gemini 3 Preview
-    this.apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent?key=${this.apiKey}`;
+    // لا تحفظ مفاتيح هنا — سيتم الاعتماد على الخادم الوسيط
     this.init();
   }
 
@@ -21,7 +20,7 @@ class Chatbot {
     const win = document.createElement('div');
     win.id = 'chatbotWindow'; win.className = 'chatbot-window hidden';
     win.innerHTML = `
-      <div class="chatbot-header"><span>🤖 مساعد مهنتي (Gemini 3)</span><button onclick="chatbot.toggleChat()">✕</button></div>
+      <div class="chatbot-header"><span>🤖 مساعد مهنتي</span><button onclick="chatbot.toggleChat()">✕</button></div>
       <div class="chatbot-messages" id="chatbotMessages"></div>
       <div class="chatbot-input-container">
         <input type="text" id="chatbotInput" placeholder="اسألني أي شيء..." autocomplete="off" />
@@ -33,7 +32,7 @@ class Chatbot {
   }
 
   addWelcomeMessage() {
-    this.addMessage({ type: 'bot', text: 'مرحباً! أنا أعمل الآن بنظام Gemini 3. كيف يمكنني مساعدتك؟' });
+    this.addMessage({ type: 'bot', text: 'مرحباً! كيف يمكنني مساعدتك؟' });
   }
 
   toggleChat() {
@@ -51,7 +50,8 @@ class Chatbot {
     this.showTyping();
 
     try {
-      const response = await fetch(this.apiUrl, {
+      // استدعاء proxy محلي بدلاً من استدعاء Google مباشرة
+      const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -63,12 +63,21 @@ class Chatbot {
 
       const data = await response.json();
       this.hideTyping();
-      if (data.candidates && data.candidates[0].content) {
-        this.addMessage({ type: 'bot', text: data.candidates[0].content.parts[0].text });
+
+      // بناء على هيكلة استجابة Generative Language API
+      if (data?.candidates && data.candidates[0]?.content?.parts) {
+        const text = data.candidates[0].content.parts.map(p => p.text).join('\n');
+        this.addMessage({ type: 'bot', text });
+      } else if (data?.output?.[0]?.content?.[0]?.text) {
+        // fallback structure if different
+        this.addMessage({ type: 'bot', text: data.output[0].content[0].text });
+      } else {
+        this.addMessage({ type: 'bot', text: 'لم أتلقَ ردًا واضحًا من الخادم.' });
+        console.warn('Unexpected response:', data);
       }
     } catch (error) {
       this.hideTyping();
-      this.addMessage({ type: 'bot', text: "حدث خطأ في الاتصال بالموديل الجديد. تأكد من تفعيل Gemini 3 في حسابك." });
+      this.addMessage({ type: 'bot', text: "حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة لاحقاً." });
       console.error(error);
     }
   }
